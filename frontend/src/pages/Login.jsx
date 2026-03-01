@@ -11,31 +11,34 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault(); 
-    const toastId = toast.loading("Connecting to MLRIT Server...");
+    const toastId = toast.loading("Verifying with database...");
     
     try {
-      // 🚀 DIRECT LIVE LINK - NO VARIABLES
-      const response = await axios.post("https://mlrit-counseling-portal.onrender.com/api/auth/login", {
-        email: email.trim().toLowerCase(), 
-        password: password.trim().toUpperCase() 
-      });
+      // 🚀 THE BULLETPROOF PAYLOAD
+      // We send both variations of the variable names so your backend cannot fail to find them.
+      const payload = {
+        email: email.trim().toLowerCase(),
+        studentEmail: email.trim().toLowerCase(),
+        password: password.trim().toUpperCase(),
+        htNo: password.trim().toUpperCase()
+      };
 
-      // Saving student session data
-      localStorage.setItem('studentHtNo', response.data.student.htNo);
-      localStorage.setItem('studentName', response.data.student.name);
+      const response = await axios.post("https://mlrit-counseling-portal.onrender.com/api/auth/login", payload);
 
-      toast.success(`Welcome back, ${response.data.student.name}!`, { id: toastId });
+      // Save to local storage so the dashboard knows who logged in
+      localStorage.setItem('studentHtNo', response.data.student?.htNo || payload.htNo);
+      localStorage.setItem('studentName', response.data.student?.name || 'Student');
+
+      toast.success(`Login Successful!`, { id: toastId });
       navigate('/dashboard');
       
     } catch (error) {
-      console.error("Login Error:", error);
+      console.error("Login Error:", error.response?.data || error.message);
       
       if (error.response) {
-        // The server is awake but your email/password is wrong
         toast.error(error.response.data.message || "Invalid Email or Roll Number! ❌", { id: toastId });
       } else {
-        // The server is still sleeping (Render Free Tier)
-        toast.error("Server is waking up... Please wait 30 seconds and click login again! ⏳", { id: toastId });
+        toast.error("Server is waking up... Please wait 30 seconds and try again! ⏳", { id: toastId });
       }
     }
   };
@@ -61,8 +64,8 @@ export default function Login() {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="24r21a05xx@mlrit.ac.in" 
-                className="w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none font-bold"
+                placeholder="student@mlrit.ac.in" 
+                className="w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none font-bold text-slate-700"
                 required
               />
             </div>
@@ -77,7 +80,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Roll Number" 
-                className="w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none uppercase font-bold"
+                className="w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none uppercase font-bold text-slate-700"
                 required
               />
             </div>
