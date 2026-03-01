@@ -1,0 +1,64 @@
+/* 1. The NEW Tailwind v4 Import */
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
+
+@theme {
+  /* 🌟 Custom MLRIT Branding Colors */
+  --color-primary: #1a4d2e;
+  --color-primary-hover: #4f6f52;
+  --color-accent: #d67b27;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+  }
+}
+
+@layer components {
+  /* 🧊 Glassmorphism Card Style */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-3xl border border-white shadow-xl rounded-[25px];
+  }
+
+  /* ⌨️ Global Input Field Style */
+  .input-field {
+    @apply w-full p-4 rounded-2xl border border-slate-100 bg-slate-50/50 
+           focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary 
+           outline-none transition-all duration-300 placeholder:text-slate-400;
+  }
+
+  /* 🏷️ Small Label Style */
+  .label-text {
+    @apply text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block;
+  }
+
+  /* 🔘 Primary Button Style */
+  .btn-primary {
+    @apply bg-primary text-white font-black px-8 py-4 rounded-2xl 
+           shadow-lg shadow-primary/20 hover:shadow-primary/40 
+           hover:-translate-y-1 active:scale-95 transition-all duration-300;
+  }
+
+  /* ✨ Smooth Fade-in Animation */
+  .animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* 🖨️ Professional Print Settings */
+@media print {
+  body {
+    background: white !important;
+  }
+  .glass-card {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+  }
+}
