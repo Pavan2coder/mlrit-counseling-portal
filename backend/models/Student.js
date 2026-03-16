@@ -2,13 +2,30 @@ import mongoose from 'mongoose';
 
 const studentSchema = new mongoose.Schema({
   // Basic Profile Info
-  name: { type: String, required: true },
-  htNo: { type: String, required: true, unique: true },
+  name: { 
+    type: String, 
+    required: true, 
+    trim: true // Removes accidental spaces
+  },
+  htNo: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    index: true, // 🚀 Creates a fast-search B-Tree in MongoDB
+    trim: true, 
+    uppercase: true // Forces all roll numbers to match perfectly
+  },
   branch: { type: String, default: "CSE" },
   year: String,
   dob: String,
   phone: String,
-  studentEmail: String,
+  studentEmail: { 
+    type: String, 
+    unique: true, 
+    index: true, // 🚀 Lightning-fast searches during login
+    trim: true, 
+    lowercase: true // Forces emails to be lowercase for perfect matching
+  },
   parentName: String,
   parentMobile: String,
   address: String,
