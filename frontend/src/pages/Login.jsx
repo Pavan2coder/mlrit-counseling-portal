@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Lock, User, ArrowRight } from 'lucide-react';
+// 🌟 Added Eye and EyeOff to your imports here:
+import { Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // 🌟 Added state to track if the password is visible or hidden:
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -14,8 +17,6 @@ export default function Login() {
     const toastId = toast.loading("Verifying with database...");
     
     try {
-      // 🚀 THE BULLETPROOF PAYLOAD
-      // We send both variations of the variable names so your backend cannot fail to find them.
       const payload = {
         email: email.trim().toLowerCase(),
         studentEmail: email.trim().toLowerCase(),
@@ -25,7 +26,6 @@ export default function Login() {
 
       const response = await axios.post("https://mlrit-counseling-portal.onrender.com/api/auth/login", payload);
 
-      // Save to local storage so the dashboard knows who logged in
       localStorage.setItem('studentHtNo', response.data.student?.htNo || payload.htNo);
       localStorage.setItem('studentName', response.data.student?.name || 'Student');
 
@@ -75,14 +75,26 @@ export default function Login() {
             <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-2 block">Password (Roll Number)</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              
+              {/* 🌟 Changed type dynamically to toggle between 'password' and 'text' */}
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Roll Number" 
-                className="w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none uppercase font-bold text-slate-700"
+                className="w-full p-4 pl-12 pr-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none uppercase font-bold text-slate-700"
                 required
               />
+
+              {/* 🌟 Added the clickable Eye icon button here: */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+
             </div>
           </div>
 
