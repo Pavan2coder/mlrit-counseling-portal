@@ -14,14 +14,14 @@ export const googleAuth = async (req, res) => {
     const { email, name, googleId } = req.body;
 
     // Check if email is from mlrit.ac.in domain
-    if (!email.endsWith('@mlrit.ac.in')) {
-      return res.status(400).json({ 
-        message: "Please use your MLRIT college email (@mlrit.ac.in) ❌" 
+    if (!email.toLowerCase().endsWith('@mlrit.ac.in')) {
+      return res.status(403).json({ 
+        message: "Access denied! Only MLRIT college emails (@mlrit.ac.in) are allowed. ❌" 
       });
     }
 
     // Check if student already exists
-    let student = await Student.findOne({ studentEmail: email });
+    let student = await Student.findOne({ studentEmail: email.toLowerCase() });
 
     if (student) {
       // Update Google ID if not set
@@ -41,7 +41,7 @@ export const googleAuth = async (req, res) => {
       // Create new student account
       const newStudent = new Student({
         name,
-        studentEmail: email,
+        studentEmail: email.toLowerCase(),
         googleId,
         branch: "CSE" // Default branch
       });

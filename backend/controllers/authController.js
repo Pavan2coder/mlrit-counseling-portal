@@ -5,9 +5,16 @@ export const loginStudent = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate email domain
+    if (!email.toLowerCase().endsWith('@mlrit.ac.in')) {
+      return res.status(403).json({ 
+        message: "Access denied! Only MLRIT college emails (@mlrit.ac.in) are allowed. ❌" 
+      });
+    }
+
     // We check the database for a student with this email AND this roll number
     const student = await Student.findOne({ 
-      studentEmail: email, 
+      studentEmail: email.toLowerCase(), 
       htNo: password.toUpperCase() // Ensure it checks in Uppercase
     });
     
@@ -26,6 +33,19 @@ export const signupStudent = async (req, res) => {
   try {
     const { name, studentEmail, htNo } = req.body;
 
+    // Validate email domain
+    if (!studentEmail.toLowerCase().endsWith('@mlrit.ac.in')) {
+      return res.status(403).json({ 
+        message: "Access denied! Only MLRIT college emails (@mlrit.ac.in) are allowed. ❌" 
+      });
+    }
+
+    // Check if this email is already registered
+    const existingEmail = await Student.findOne({ studentEmail: studentEmail.toLowerCase() });
+    if (existingEmail) {
+      return res.status(400).json({ message: "This email is already registered! ❌" });
+    }
+
     // Check if this Roll Number is already in the database
     const existingStudent = await Student.findOne({ htNo: htNo.toUpperCase() });
     
@@ -36,7 +56,7 @@ export const signupStudent = async (req, res) => {
     // Create the new student record
     const newStudent = new Student({
       name,
-      studentEmail,
+      studentEmail: studentEmail.toLowerCase(),
       htNo: htNo.toUpperCase(),
       branch: "CSE" // Default branch
     });

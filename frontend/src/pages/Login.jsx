@@ -14,6 +14,13 @@ function LoginForm() {
 
   const handleLogin = async (e) => {
     e.preventDefault(); 
+    
+    // Validate email domain before sending request
+    if (!email.toLowerCase().endsWith('@mlrit.ac.in')) {
+      toast.error("Only MLRIT college emails (@mlrit.ac.in) are allowed! ❌");
+      return;
+    }
+    
     const toastId = toast.loading("Verifying with database...");
     
     try {
@@ -99,6 +106,8 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@mlrit.ac.in" 
+                pattern="[a-zA-Z0-9._%+-]+@mlrit\.ac\.in$"
+                title="Please enter a valid MLRIT email address (e.g., student@mlrit.ac.in)"
                 className="w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none font-bold text-slate-700"
                 required
               />
