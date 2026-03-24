@@ -47,6 +47,12 @@ function SignupForm() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
         });
 
+        // Validate email domain after user selects account
+        if (!userInfo.data.email.toLowerCase().endsWith('@mlrit.ac.in')) {
+          toast.error("Access denied! Only MLRIT college emails (@mlrit.ac.in) are allowed. ❌", { id: toastId });
+          return;
+        }
+
         const response = await axios.post("https://mlrit-counseling-portal.onrender.com/api/auth/google", {
           email: userInfo.data.email,
           name: userInfo.data.name,
@@ -66,8 +72,12 @@ function SignupForm() {
       }
     },
     onError: () => {
-      toast.error("Google signup failed! Please try again.");
-    }
+      toast.error("Google signup cancelled or failed!");
+    },
+    // Force account selection every time
+    prompt: 'select_account',
+    // Allow user to see all their Google accounts
+    select_account: true
   });
 
   return (
