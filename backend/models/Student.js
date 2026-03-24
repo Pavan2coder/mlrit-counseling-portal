@@ -1,19 +1,19 @@
 import mongoose from 'mongoose';
 
 const studentSchema = new mongoose.Schema({
-  // Basic Profile Info
+  // --- 1. Basic Profile Info ---
   name: { 
     type: String, 
     required: true, 
-    trim: true // Removes accidental spaces
+    trim: true 
   },
   htNo: { 
     type: String, 
     required: true, 
     unique: true, 
-    index: true, // 🚀 Creates a fast-search B-Tree in MongoDB
+    index: true, 
     trim: true, 
-    uppercase: true // Forces all roll numbers to match perfectly
+    uppercase: true 
   },
   branch: { type: String, default: "CSE" },
   year: String,
@@ -22,36 +22,77 @@ const studentSchema = new mongoose.Schema({
   studentEmail: { 
     type: String, 
     unique: true, 
-    index: true, // 🚀 Lightning-fast searches during login
+    index: true, 
     trim: true, 
-    lowercase: true // Forces emails to be lowercase for perfect matching
+    lowercase: true 
   },
   parentName: String,
   parentMobile: String,
   address: String,
-  
-  // Performance Entry
-  academicRecord: [{
-    subjectName: String, month: String, attendance: String,
-    cie1: String, cie2: String, viva: String,
-    cieAvg: String, univMarks: String, totalMarks: String
+
+  // --- 2. Detailed Performance & Attendance Record (From physical forms) ---
+  academicRecords: [{
+    semesterName: String, // e.g., "I-Year I-Semester"
+    subjects: [{
+      subjectCodeAndName: String,
+      attendance: {
+        month1: { name: String, percentage: String }, // e.g., { name: "Sep", percentage: "92.86" }
+        month2: { name: String, percentage: String },
+        month3: { name: String, percentage: String },
+        month4: { name: String, percentage: String }
+      },
+      cie1: String, // 35 Marks
+      cie2: String, // 35 Marks
+      viva: String, // 5 Marks
+      cieAvg: String, // 40M
+      univMarks: String, // 60M
+      totalMarks: String, // 100M
+      grade: String // e.g., "A+", "B"
+    }],
+    cumulativeMonthlyAttendance: String,
+    cumulativeSemesterAttendance: String,
+    totalPercentageMarks: String
   }],
 
-  // Interaction / Counseling Logs
-  interactionLogs: [{
-    date: String, counselor: String, remarks: String
+  // --- 3. Overall Academic Summary & Backlogs ---
+  academicSummary: [{
+    semester: String, // e.g., "1st - 1st Sem"
+    percentage: String,
+    backlogs: String
   }],
 
-  // 🌟 NEW: Activities & Certifications
+  // --- 4. Project Details ---
+  projects: {
+    miniProject: { title: String, guide: String, organization: String },
+    majorProject: { title: String, guide: String, organization: String }
+  },
+
+  // --- 5. Competitive Exams ---
+  competitiveExams: {
+    gate: String, 
+    gre: String, 
+    toefl: String, 
+    ielts: String, 
+    cat: String, 
+    gmat: String
+  },
+
+  // --- 6. Activities, Visits & Certifications ---
+  industrialVisits: [{ companyName: String, date: String }],
   certifications: [{
-    courseName: String, // e.g., "AWS Cloud Practitioner"
-    issuer: String,     // e.g., "Amazon"
-    date: String        // e.g., "Nov 2025"
+    courseName: String, 
+    issuer: String,     
+    date: String        
   }],
   activities: [{
-    eventName: String,  // e.g., "College Hackathon"
-    role: String,       // e.g., "Team Lead"
-    date: String        // e.g., "Oct 2025"
+    eventName: String,  
+    role: String,       
+    date: String        
+  }],
+
+  // --- 7. Interaction / Counseling Logs ---
+  interactionLogs: [{
+    date: String, counselor: String, remarks: String
   }]
 
 }, { timestamps: true });
