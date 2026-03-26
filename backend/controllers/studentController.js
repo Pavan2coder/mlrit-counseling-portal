@@ -3,10 +3,13 @@ import Student from '../models/Student.js'; // Keep this at the very top!
 // Logic to Save or Update a Student Record
 export const saveStudentRecord = async (req, res) => {
   try {
-    const { htNo } = req.body;
+    const { htNo, studentEmail } = req.body;
+    
+    // Use htNo if available, otherwise use email (for Google OAuth users)
+    const query = htNo ? { htNo } : { studentEmail: studentEmail.toLowerCase() };
     
     const student = await Student.findOneAndUpdate(
-      { htNo }, 
+      query, 
       req.body, 
       { new: true, upsert: true }
     );
@@ -17,10 +20,18 @@ export const saveStudentRecord = async (req, res) => {
   }
 };
 
-// 🌟 NEW: Logic to Fetch a Student by Hall Ticket Number
+// 🌟 Logic to Fetch a Student by Hall Ticket Number or Email
 export const getStudent = async (req, res) => {
   try {
-    const student = await Student.findOne({ htNo: req.params.htNo });
+    const identifier = req.params.htNo;
+    
+    // Try to find by htNo first, then by email
+    let student = await Student.findOne({ htNo: identifier });
+    
+    if (!student) {
+      // If not found by htNo, try email (for Google OAuth users)
+      student = await Student.findOne({ studentEmail: identifier.toLowerCase() });
+    }
     
     if (!student) {
       return res.status(404).json({ message: "Student not found in database! ❌" });
