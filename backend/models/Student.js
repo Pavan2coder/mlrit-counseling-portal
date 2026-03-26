@@ -9,11 +9,16 @@ const studentSchema = new mongoose.Schema({
   },
   htNo: { 
     type: String, 
-    required: true, 
     unique: true, 
+    sparse: true,
     index: true, 
     trim: true, 
     uppercase: true 
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
   },
   branch: { type: String, default: "CSE" },
   year: String,
