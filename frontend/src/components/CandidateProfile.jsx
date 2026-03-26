@@ -23,13 +23,22 @@ export default function CandidateProfile() {
   useEffect(() => {
     // 1. Look in the browser memory for the logged-in student
     const loggedInHtNo = localStorage.getItem('studentHtNo');
+    const studentEmail = localStorage.getItem('studentEmail');
+    const isGoogleAuth = localStorage.getItem('isGoogleAuth');
     
-    if (loggedInHtNo) {
-      // Pre-fill the Hall Ticket Number just in case they are a new user
-      setFormData(prev => ({ ...prev, htNo: loggedInHtNo }));
+    // Use email as identifier for Google OAuth users, htNo for regular users
+    const identifier = (isGoogleAuth === 'true' && studentEmail) ? studentEmail : loggedInHtNo;
+    
+    if (identifier) {
+      // Pre-fill the Hall Ticket Number or email
+      if (isGoogleAuth === 'true') {
+        setFormData(prev => ({ ...prev, studentEmail: studentEmail, htNo: loggedInHtNo || '' }));
+      } else {
+        setFormData(prev => ({ ...prev, htNo: loggedInHtNo }));
+      }
 
       // 2. Automatically fetch their data from the cloud!
-      axios.get(`http://localhost:8000/api/students/${loggedInHtNo}`)
+      axios.get(`http://localhost:8000/api/students/${identifier}`)
         .then(response => {
           if (response.data) {
             setFormData(prev => ({ ...prev, ...response.data }));

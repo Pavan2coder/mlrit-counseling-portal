@@ -73,9 +73,11 @@ function LoginForm() {
           googleId: userInfo.data.sub
         });
 
-        localStorage.setItem('studentHtNo', response.data.student?.htNo || '');
+        localStorage.setItem('studentHtNo', response.data.student?.htNo || response.data.student?.studentEmail || '');
+        localStorage.setItem('studentEmail', response.data.student?.studentEmail || userInfo.data.email);
         localStorage.setItem('studentName', response.data.student?.name || userInfo.data.name);
         localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('isGoogleAuth', 'true');
 
         toast.success(`Welcome ${userInfo.data.name}!`, { id: toastId });
         navigate('/dashboard');
@@ -88,10 +90,10 @@ function LoginForm() {
     onError: () => {
       toast.error("Google login cancelled or failed!");
     },
-    // Force account selection every time
+    flow: 'implicit',
     prompt: 'select_account',
-    // Allow user to see all their Google accounts
-    select_account: true
+    hint: '',
+    hosted_domain: ''
   });
 
   return (
