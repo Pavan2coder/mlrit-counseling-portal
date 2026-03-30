@@ -30,7 +30,7 @@ export default function ActivitiesCerts() {
     if (!htNo) return alert("⚠️ Please enter a Hall Ticket Number to search!");
 
     try {
-      const response = await axios.get(`http://localhost:8000/api/students/${htNo}`);
+      const response = await axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`);
       
       if (response.data.certifications?.length > 0) setCertifications(response.data.certifications);
       if (response.data.activities?.length > 0) setActivities(response.data.activities);
@@ -47,7 +47,7 @@ export default function ActivitiesCerts() {
     if (!htNo) return alert("⚠️ Please enter the student's Hall Ticket Number first!");
 
     try {
-      await axios.post('http://localhost:8000/api/students/save', {
+      await axios.post('https://mlrit-counseling-portal.onrender.com/api/students/save', {
         htNo: htNo,
         certifications: certifications,
         activities: activities

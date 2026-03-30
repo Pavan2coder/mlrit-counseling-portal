@@ -24,7 +24,7 @@ export default function CounselingLogs() {
 
   const fetchLogs = async (rollNo) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/students/${rollNo}`);
+      const response = await axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${rollNo}`);
       if (response.data.interactionLogs) {
         setLogs(response.data.interactionLogs);
       }
@@ -40,7 +40,7 @@ export default function CounselingLogs() {
 
     try {
       // 1. Get the student's current data from the database
-      const res = await axios.get(`http://localhost:8000/api/students/${htNo}`);
+      const res = await axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`);
       const student = res.data;
 
       // 2. Format the new log entry
@@ -54,7 +54,7 @@ export default function CounselingLogs() {
       const updatedLogs = student.interactionLogs ? [...student.interactionLogs, logEntry] : [logEntry];
 
       // 4. Send the update to MongoDB
-      await axios.put(`http://localhost:8000/api/students/${htNo}`, {
+      await axios.put(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`, {
         ...student,
         interactionLogs: updatedLogs
       });

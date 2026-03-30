@@ -13,7 +13,7 @@ export default function Analytics() {
   useEffect(() => {
     const loggedInHtNo = localStorage.getItem('studentHtNo');
     if (loggedInHtNo) {
-      axios.get(`http://localhost:8000/api/students/${loggedInHtNo}`)
+      axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${loggedInHtNo}`)
         .then(response => {
           const student = response.data;
           if (student.academicRecord && student.academicRecord.length > 0) {

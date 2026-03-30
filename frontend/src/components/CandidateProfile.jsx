@@ -26,19 +26,17 @@ export default function CandidateProfile() {
     const studentEmail = localStorage.getItem('studentEmail');
     const isGoogleAuth = localStorage.getItem('isGoogleAuth');
     
-    // Use email as identifier for Google OAuth users, htNo for regular users
-    const identifier = (isGoogleAuth === 'true' && studentEmail) ? studentEmail : loggedInHtNo;
-    
-    if (identifier) {
-      // Pre-fill the Hall Ticket Number or email
-      if (isGoogleAuth === 'true') {
-        setFormData(prev => ({ ...prev, studentEmail: studentEmail, htNo: loggedInHtNo || '' }));
-      } else {
-        setFormData(prev => ({ ...prev, htNo: loggedInHtNo }));
-      }
+    // Always resolve to a roll number (htNo) for the API call
+    let htNo = loggedInHtNo;
+    if (isGoogleAuth === 'true' && studentEmail) {
+      htNo = studentEmail.split('@')[0].toUpperCase();
+    }
+
+    if (htNo) {
+      setFormData(prev => ({ ...prev, htNo, ...(studentEmail && { studentEmail }) }));
 
       // 2. Automatically fetch their data from the cloud!
-      axios.get(`http://localhost:8000/api/students/${identifier}`)
+      axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`)
         .then(response => {
           if (response.data) {
             setFormData(prev => ({ ...prev, ...response.data }));
@@ -69,7 +67,7 @@ export default function CandidateProfile() {
     const toastId = toast.loading('Saving your profile...');
 
     try {
-      const response = await axios.post('http://localhost:8000/api/students/save', formData);
+      const response = await axios.post('https://mlrit-counseling-portal.onrender.com/api/students/save', formData);
       toast.success("Profile Saved Successfully! ✅", { id: toastId });
     } catch (error) {
       console.error("Save Error:", error);
