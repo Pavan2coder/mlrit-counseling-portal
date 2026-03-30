@@ -13,6 +13,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust Render's reverse proxy so express-rate-limit can read the real client IP
+app.set('trust proxy', 1);
+
 // 🛡️ SECURITY LAYER 1: Helmet blocks common web vulnerabilities
 app.use(helmet());
 

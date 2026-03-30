@@ -38,11 +38,15 @@ export const googleAuth = async (req, res) => {
         token
       });
     } else {
+      // Extract roll number from email (e.g. 24r21a05gw@mlrit.ac.in -> 24R21A05GW)
+      const htNo = email.split('@')[0].toUpperCase();
+
       // Create new student account
       const newStudent = new Student({
         name,
         studentEmail: email.toLowerCase(),
         googleId,
+        htNo,
         branch: "CSE" // Default branch
       });
 
