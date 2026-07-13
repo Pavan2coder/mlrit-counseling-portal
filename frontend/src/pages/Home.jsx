@@ -42,7 +42,7 @@ export default function Home() {
         <div className="flex items-center gap-4 mb-12">
           <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-green-500"></div>
           <p className="text-green-400 font-mono tracking-[0.3em] text-xs md:text-sm uppercase">
-            Interactive Counseling System • 2025-29
+            Student Counseling Portal
           </p>
           <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-orange-500"></div>
         </div>
