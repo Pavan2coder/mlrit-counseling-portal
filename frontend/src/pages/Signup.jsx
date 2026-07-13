@@ -39,8 +39,6 @@ function SignupForm() {
   // Google OAuth using useGoogleLogin hook
   const googleSignup = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      const toastId = toast.loading("Signing up with Google...");
-      
       try {
         // Get user info from Google
         const userInfo = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -49,7 +47,7 @@ function SignupForm() {
 
         // Validate email domain after user selects account
         if (!userInfo.data.email.toLowerCase().endsWith('@mlrit.ac.in')) {
-          toast.error("Access denied! Only MLRIT college emails (@mlrit.ac.in) are allowed. ❌", { id: toastId });
+          toast.error("Access denied! Only MLRIT college emails (@mlrit.ac.in) are allowed. ❌");
           return;
         }
 
@@ -65,12 +63,12 @@ function SignupForm() {
         localStorage.setItem('authToken', response.data.token);
         localStorage.setItem('isGoogleAuth', 'true');
 
-        toast.success(`Welcome ${userInfo.data.name}!`, { id: toastId });
+        toast.success(`Welcome ${userInfo.data.name}!`);
         navigate('/dashboard');
         
       } catch (error) {
         console.error("Google Signup Error:", error.response?.data || error.message);
-        toast.error(error.response?.data?.message || "Google signup failed! ❌", { id: toastId });
+        toast.error(error.response?.data?.message || "Google signup failed! ❌");
       }
     },
     onError: () => {
