@@ -1,64 +1,68 @@
-/* 1. The NEW Tailwind v4 Import */
+/* Tailwind v4 */
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
 
 @theme {
-  /* 🌟 Custom MLRIT Branding Colors */
+  /* MLRIT palette (unchanged) */
   --color-primary: #1a4d2e;
-  --color-primary-hover: #4f6f52;
+  --color-primary-hover: #153d24;
   --color-accent: #d67b27;
+  --color-canvas: #f4f3ee;
+  --font-sans: "Lexend", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   body {
-    @apply bg-slate-100 text-slate-800 antialiased;
+    @apply bg-canvas text-slate-800 antialiased font-sans;
   }
 }
 
 @layer components {
-  /* 🧊 Glassmorphism Card Style */
-  .glass-card {
-    @apply bg-white/80 backdrop-blur-3xl border border-white shadow-xl rounded-[25px];
+  /* Auth brand side panel (deep green with orange edge) */
+  .brand-panel {
+    @apply relative overflow-hidden bg-primary text-white;
   }
 
-  /* ⌨️ Global Input Field Style */
+  /* Clean flat card — square-ish corners, hairline border, soft shadow */
+  .card {
+    @apply bg-white rounded-2xl border border-slate-200/70 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)];
+  }
+
+  /* Input field */
   .input-field {
-    @apply w-full p-4 rounded-2xl border border-slate-100 bg-slate-50/50 
-           focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary 
-           outline-none transition-all duration-300 placeholder:text-slate-400;
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/60
+           focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary
+           outline-none transition-colors placeholder:text-slate-400 text-slate-800 font-medium;
   }
 
-  /* 🏷️ Small Label Style */
   .label-text {
-    @apply text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block;
+    @apply text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block;
   }
 
-  /* 🔘 Primary Button Style */
+  /* Primary button */
   .btn-primary {
-    @apply bg-primary text-white font-black px-8 py-4 rounded-2xl 
-           shadow-lg shadow-primary/20 hover:shadow-primary/40 
-           hover:-translate-y-1 active:scale-95 transition-all duration-300;
+    @apply w-full bg-primary text-white font-semibold px-6 py-3.5 rounded-xl
+           hover:bg-primary-hover active:scale-[0.99] transition-all
+           flex items-center justify-center gap-2;
   }
 
-  /* ✨ Smooth Fade-in Animation */
+  /* Secondary / outline button */
+  .btn-ghost {
+    @apply w-full bg-white border border-slate-200 text-slate-700 font-semibold px-6 py-3.5 rounded-xl
+           hover:border-primary hover:bg-slate-50 active:scale-[0.99] transition-all
+           flex items-center justify-center gap-3;
+  }
+
   .animate-fade-in {
-    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 }
 
-/* 🖨️ Professional Print Settings */
 @media print {
-  body {
-    background: white !important;
-  }
-  .glass-card {
-    box-shadow: none !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 0 !important;
-  }
+  body { background: white !important; }
+  .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
 }
