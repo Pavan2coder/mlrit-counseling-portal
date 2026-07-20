@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import toast from 'react-hot-toast'; 
+import toast from 'react-hot-toast';
+import { Printer, Save } from 'lucide-react';
 
 export default function CandidateProfile() {
   // This holds all the form data
@@ -40,20 +41,20 @@ export default function CandidateProfile() {
         .then(response => {
           if (response.data) {
             setFormData(prev => ({ ...prev, ...response.data }));
-            toast.success("Your profile data is loaded! 📥");
+            toast.success("Your profile data is loaded!", { id: 'profile-load' });
           }
         })
         .catch(error => {
           // If the database says 404, it just means they are a brand new student!
           if (error.response && error.response.status === 404) {
-            toast.success("Welcome! Please fill out your profile for the first time. ✨");
+            toast.success("Welcome! Please fill out your profile for the first time.", { id: 'profile-load' });
           } else {
             console.error("Auto-fetch error:", error);
-            toast.error("Failed to load your profile data.");
+            toast.error("Failed to load your profile data.", { id: 'profile-load' });
           }
         });
     } else {
-      toast.error("⚠️ No student logged in. Please log in again.");
+      toast.error("No student logged in. Please log in again.", { id: 'profile-load' });
     }
   }, []);
 
@@ -68,7 +69,7 @@ export default function CandidateProfile() {
 
     try {
       const response = await axios.post('https://mlrit-counseling-portal.onrender.com/api/students/save', formData);
-      toast.success("Profile Saved Successfully! ✅", { id: toastId });
+      toast.success("Profile Saved Successfully!", { id: toastId });
     } catch (error) {
       console.error("Save Error:", error);
       toast.error("Failed to connect to server. Check your backend!", { id: toastId });
@@ -78,35 +79,35 @@ export default function CandidateProfile() {
   return (
     <div className="animate-fade-in pb-10">
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex flex-wrap gap-4 justify-between items-start mb-8">
         <div>
-          <h2 className="text-4xl font-black text-slate-800">My Profile</h2>
-          <p className="text-slate-400 font-medium">Personal Student Record</p>
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">My Profile</h2>
+          <p className="text-slate-500 mt-1">Personal Student Record</p>
         </div>
-        
+
         {/* Buttons hidden when printing */}
-        <div className="flex gap-4 print:hidden">
-          <button 
+        <div className="flex gap-3 print:hidden">
+          <button
             onClick={() => window.print()}
-            className="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold shadow-xl hover:-translate-y-1 transition-all cursor-pointer flex items-center gap-2"
+            className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-semibold hover:border-slate-400 active:scale-[0.99] transition-all cursor-pointer flex items-center gap-2"
           >
-            🖨️ Print PDF
+<Printer size={18} /> Print PDF
           </button>
-          
-          <button 
+
+          <button
             onClick={handleSave}
-            className="bg-primary text-white px-8 py-3 rounded-xl font-black shadow-xl hover:-translate-y-1 transition-all cursor-pointer flex items-center gap-2"
+            className="bg-primary text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-primary-hover active:scale-[0.99] transition-all cursor-pointer flex items-center gap-2"
           >
-            💾 Save Profile
+<Save size={18} /> Save Profile
           </button>
         </div>
       </div>
 
-      <div className="glass-card grid grid-cols-1 md:grid-cols-3 gap-8">
-        
+      <div className="card p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+
         {/* Column 1: Identification */}
         <div className="space-y-4">
-          <h3 className="text-xs font-black text-primary uppercase border-b-2 border-primary/20 pb-2">Identification</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b border-slate-200 pb-2">Identification</h3>
           <div><label className="label-text">1. Full Name</label><input name="name" value={formData.name} onChange={handleChange} placeholder="Enter Full Name" className="input-field" /></div>
           
           {/* Made the HT No field read-only since it's tied to their login! */}
@@ -120,7 +121,7 @@ export default function CandidateProfile() {
 
         {/* Column 2: Academic & Contact */}
         <div className="space-y-4">
-          <h3 className="text-xs font-black text-primary uppercase border-b-2 border-primary/20 pb-2">Academic & Contact</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b border-slate-200 pb-2">Academic & Contact</h3>
           <div className="grid grid-cols-2 gap-2">
             <div><label className="label-text">6. Inter %</label><input name="interMarks" value={formData.interMarks} onChange={handleChange} placeholder="%" className="input-field" /></div>
             <div><label className="label-text">7. Rank</label><input name="rank" value={formData.rank} onChange={handleChange} placeholder="EAMCET Rank" className="input-field" /></div>
@@ -133,7 +134,7 @@ export default function CandidateProfile() {
 
         {/* Column 3: Family & Career */}
         <div className="space-y-4">
-          <h3 className="text-xs font-black text-primary uppercase border-b-2 border-primary/20 pb-2">Family & Career</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b border-slate-200 pb-2">Family & Career</h3>
           <div><label className="label-text">10. Parent/Guardian Name</label><input name="parentName" value={formData.parentName} onChange={handleChange} placeholder="Parent's Name" className="input-field" /></div>
           <div><label className="label-text">11. Designation</label><input name="designation" value={formData.designation} onChange={handleChange} placeholder="Job Title / Profession" className="input-field" /></div>
           <div><label className="label-text">12. Organization</label><input name="organization" value={formData.organization} onChange={handleChange} placeholder="Company Name" className="input-field" /></div>
