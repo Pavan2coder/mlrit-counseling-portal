@@ -63,7 +63,7 @@ export default function PerformanceEntry() {
       const payload = { academicRecords };
 
       await axios.put(`${API_URL}/api/students/${htNo}`, payload);
-      toast.success("Records saved successfully! 💾", { id: toastId });
+      toast.success("Records saved successfully!", { id: toastId });
     } catch (error) {
       console.error(error);
       toast.error("Failed to save records. Please try again.", { id: toastId });
@@ -109,21 +109,21 @@ export default function PerformanceEntry() {
   return (
     <div className="animate-fade-in pb-20">
       
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap gap-4 justify-between items-start mb-8">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-            <BookOpen className="text-[#1a4d2e]" size={32} />
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+            <BookOpen className="text-primary" size={30} />
             Performance Record
           </h2>
-          <p className="text-slate-500 font-medium mt-1">Manage attendance and CIE/University marks.</p>
+          <p className="text-slate-500 mt-1">Manage attendance and CIE/University marks.</p>
         </div>
-        
-        <button 
-          onClick={handleSave} 
+
+        <button
+          onClick={handleSave}
           disabled={loading}
-          className="bg-[#1a4d2e] hover:bg-green-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-green-900/20 active:scale-95 disabled:opacity-50"
+          className="bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
         >
-          <Save size={20} /> {loading ? "Saving..." : "Save All Records"}
+          <Save size={18} /> {loading ? "Saving..." : "Save All Records"}
         </button>
       </div>
 
