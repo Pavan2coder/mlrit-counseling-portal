@@ -1,75 +1,91 @@
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion'; // For that smooth "React Bits" movement
+import { motion } from 'framer-motion';
+import { ArrowRight, GraduationCap, LineChart, ShieldCheck } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
 
+  const features = [
+    { icon: <GraduationCap size={18} />, label: 'Academic Records' },
+    { icon: <LineChart size={18} />, label: 'Performance Analytics' },
+    { icon: <ShieldCheck size={18} />, label: 'Secure Counseling Logs' },
+  ];
+
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030712]">
-      
-      {/* 🌟 THE AURORA BACKGROUND (React Bits Style) */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-green-500/20 blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-orange-500/20 blur-[120px] animate-pulse"></div>
-        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-indigo-500/10 blur-[100px]"></div>
+    <div className="min-h-screen w-full grid lg:grid-cols-2">
+
+      {/* LEFT — brand panel */}
+      <div className="brand-panel hidden lg:flex flex-col justify-between p-14">
+        {/* decorative geometry */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full border border-white/10" />
+        <div className="absolute -bottom-32 -left-16 w-[28rem] h-[28rem] rounded-full border border-white/10" />
+        <div className="absolute bottom-0 right-0 w-40 h-40 bg-accent/80 [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
+
+        <div className="relative z-10 bg-white/95 p-4 rounded-xl w-40 h-24 flex items-center justify-center">
+          <img src="/mlrit-logo.png" alt="MLRIT Logo" className="max-h-full max-w-full object-contain" />
+        </div>
+
+        <div className="relative z-10">
+          <p className="text-accent font-semibold tracking-[0.25em] text-xs uppercase mb-4">
+            MLR Institute of Technology
+          </p>
+          <h2 className="text-4xl font-extrabold leading-tight text-white/95">
+            One place for every<br />student's academic<br />journey.
+          </h2>
+          <p className="text-white/60 mt-5 max-w-sm leading-relaxed">
+            Records, analytics, certificates and counseling history — organized,
+            secure and always within reach.
+          </p>
+        </div>
+
+        <p className="relative z-10 text-white/40 text-xs">
+          UGC Autonomous · NBA Tier-1 · NAAC 'A' Grade
+        </p>
       </div>
 
-      {/* 🧊 THE MAIN GLASS CARD */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10 glass-card max-w-2xl w-full p-12 flex flex-col items-center border border-white/10 bg-white/5 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-      >
-        
-        {/* Logo with Glow */}
-        <div className="relative mb-10 group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-orange-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-          <div className="relative bg-white p-6 rounded-2xl shadow-xl flex items-center justify-center w-64 h-32">
-            <img 
-              src="/mlrit-logo.png" 
-              alt="MLRIT Logo" 
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
-        </div>
-
-        {/* Futuristic Text */}
-        <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
-          MLRIT PORTAL
-        </h1>
-        
-        <div className="flex items-center gap-4 mb-12">
-          <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-green-500"></div>
-          <p className="text-green-400 font-mono tracking-[0.3em] text-xs md:text-sm uppercase">
-            Student Counseling Portal
-          </p>
-          <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-orange-500"></div>
-        </div>
-
-        {/* The Action Button (React Bits Glow Style) */}
-        <button 
-          onClick={() => navigate('/login')}
-          className="group relative px-12 py-5 bg-white text-black font-black text-xl rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] cursor-pointer overflow-hidden"
+      {/* RIGHT — entry */}
+      <div className="flex flex-col items-center justify-center p-8 sm:p-14 bg-canvas">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
         >
-          <span className="relative z-10 flex items-center gap-3">
-            OPEN COUNSELING BOOK
-            <motion.span
-              animate={{ x: [0, 5, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >
-              →
-            </motion.span>
+          {/* logo on mobile only */}
+          <div className="lg:hidden bg-white border border-slate-200 p-4 rounded-xl w-36 h-20 flex items-center justify-center mb-10">
+            <img src="/mlrit-logo.png" alt="MLRIT Logo" className="max-h-full max-w-full object-contain" />
+          </div>
+
+          <span className="inline-block text-primary bg-primary/10 font-semibold text-xs tracking-wider uppercase px-3 py-1 rounded-full mb-6">
+            Student Counseling Portal
           </span>
-          {/* Hover effect overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-orange-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </button>
 
-      </motion.div>
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
+            MLRIT
+            <span className="block text-primary">Portal</span>
+          </h1>
 
-      {/* Subtle Grid Overlay */}
-      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+          <div className="h-1 w-16 bg-accent rounded-full mt-6 mb-6" />
+
+          <p className="text-slate-500 leading-relaxed mb-10">
+            Sign in with your college account to open your counseling book and
+            track your academic progress.
+          </p>
+
+          <button onClick={() => navigate('/login')} className="btn-primary text-base">
+            Open Counseling Book
+            <ArrowRight size={20} />
+          </button>
+
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {features.map((f) => (
+              <div key={f.label} className="flex items-center gap-2 text-slate-600 text-sm font-medium">
+                <span className="text-primary">{f.icon}</span>
+                {f.label}
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
