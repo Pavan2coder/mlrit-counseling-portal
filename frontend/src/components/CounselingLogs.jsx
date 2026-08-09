@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Save, UserCheck, Calendar, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, MessageSquare, Save, CalendarDays, UserCheck, FileText } from 'lucide-react';
+import { PageHeader, Sheet, ListGroup, Field, AreaField, EmptyState } from './ui';
+import { uiSpring } from '../motion';
+
+const API = "https://mlrit-counseling-portal.onrender.com";
+const today = () => new Date().toISOString().split('T')[0];
 
 export default function CounselingLogs() {
   const [htNo, setHtNo] = useState("");
   const [logs, setLogs] = useState([]);
-  
-  // State for the new log the student is typing
-  const [newLog, setNewLog] = useState({
-    date: new Date().toISOString().split('T')[0], // Defaults to today's date
-    counselor: '',
-    remarks: ''
-  });
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [newLog, setNewLog] = useState({ date: today(), counselor: '', remarks: '' });
 
   useEffect(() => {
     const loggedInHtNo = localStorage.getItem('studentHtNo');
@@ -24,143 +26,123 @@ export default function CounselingLogs() {
 
   const fetchLogs = async (rollNo) => {
     try {
-      const response = await axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${rollNo}`);
-      if (response.data.interactionLogs) {
-        setLogs(response.data.interactionLogs);
-      }
+      const response = await axios.get(`${API}/api/students/${rollNo}`);
+      if (response.data.interactionLogs) setLogs(response.data.interactionLogs);
     } catch (err) {
       console.error("Error loading logs", err);
     }
   };
 
-  // 🌟 The function to submit the new log
   const handleAddLog = async (e) => {
     e.preventDefault();
+    setSaving(true);
     const toastId = toast.loading("Saving counseling record...");
 
     try {
-      // 1. Get the student's current data from the database
-      const res = await axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`);
+      const res = await axios.get(`${API}/api/students/${htNo}`);
       const student = res.data;
 
-      // 2. Format the new log entry
-      const logEntry = {
-        date: newLog.date,
-        counselor: newLog.counselor,
-        remarks: newLog.remarks
-      };
-
-      // 3. Add the new log to their existing history
+      const logEntry = { date: newLog.date, counselor: newLog.counselor, remarks: newLog.remarks };
       const updatedLogs = student.interactionLogs ? [...student.interactionLogs, logEntry] : [logEntry];
 
-      // 4. Send the update to MongoDB
-      await axios.put(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`, {
-        ...student,
-        interactionLogs: updatedLogs
-      });
+      await axios.put(`${API}/api/students/${htNo}`, { ...student, interactionLogs: updatedLogs });
 
-      // 5. Update the screen and clear the form
       setLogs(updatedLogs);
-      setNewLog({ date: new Date().toISOString().split('T')[0], counselor: '', remarks: '' });
+      setNewLog({ date: today(), counselor: '', remarks: '' });
+      setSheetOpen(false);
       toast.success("Counseling record added successfully!", { id: toastId });
-
-    } catch (error) {
+    } catch (err) {
+      console.error("Save log error:", err);
       toast.error("Failed to save record.", { id: toastId });
+    } finally {
+      setSaving(false);
     }
   };
 
+  const bind = (k) => ({ value: newLog[k], onChange: (e) => setNewLog({ ...newLog, [k]: e.target.value }) });
+  const ordered = logs.slice().reverse();
+
   return (
-    <div className="animate-fade-in pb-10">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">My Counseling History</h2>
-        <p className="text-slate-500 mt-1">Add and view your interactions with faculty</p>
-      </div>
+    <div className="animate-fade-in pb-20">
+      <PageHeader
+        title="Counseling"
+        subtitle={`${logs.length} recorded ${logs.length === 1 ? 'session' : 'sessions'}`}
+        actions={
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="bg-primary text-white px-5 py-2.5 rounded-xl font-semibold cursor-pointer
+                       flex items-center gap-2 active:scale-95 hover:bg-primary-hover
+                       transition-[background-color,transform] duration-100"
+          >
+            <Plus size={17} /> Add
+          </button>
+        }
+      />
 
-      {/* 🌟 FORM SECTION: Where students add their logs */}
-      <div className="card p-6 md:p-8 mb-8 border-t-4 border-primary">
-        <h3 className="text-primary font-semibold uppercase tracking-wider text-xs mb-6 border-b border-slate-200 pb-3">Record New Session</h3>
+      {ordered.length > 0 ? (
+        <div className="relative pl-8">
+          {/* The spine: one continuous line so the sessions read as a sequence */}
+          <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-900/10" />
 
-        <form onSubmit={handleAddLog} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="label-text">Date of Session</label>
-              <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  type="date"
-                  value={newLog.date}
-                  onChange={(e) => setNewLog({...newLog, date: e.target.value})}
-                  className="input-field pl-11"
-                  required
-                />
+          {ordered.map((log, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...uiSpring, delay: Math.min(index * 0.04, 0.3) }}
+              className="relative mb-4"
+            >
+              <span className="absolute -left-[2.15rem] top-5 h-[17px] w-[17px] rounded-full t-green
+                               ring-4 ring-canvas" />
+              <div className="card p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="tile-icon t-violet"><UserCheck size={15} /></span>
+                    <p className="font-semibold text-slate-900 truncate">{log.counselor || 'Counselor'}</p>
+                  </div>
+                  <time className="text-xs font-medium text-slate-400 tabular-nums">{log.date}</time>
+                </div>
+                <p className="text-slate-600 leading-relaxed">{log.remarks}</p>
               </div>
-            </div>
-
-            <div>
-              <label className="label-text">Counselor / Faculty Name</label>
-              <div className="relative">
-                <UserCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="e.g. Dr. K. Srinivas"
-                  value={newLog.counselor}
-                  onChange={(e) => setNewLog({...newLog, counselor: e.target.value})}
-                  className="input-field pl-11"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="label-text">Remarks / Discussion Points</label>
-            <div className="relative">
-              <FileText className="absolute left-3.5 top-3.5 text-slate-400" size={18} />
-              <textarea
-                placeholder="What was discussed during the counseling session?"
-                value={newLog.remarks}
-                onChange={(e) => setNewLog({...newLog, remarks: e.target.value})}
-                className="input-field pl-11 min-h-[120px] resize-none"
-                required
-              ></textarea>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button type="submit" className="bg-primary text-white font-semibold px-6 py-3 rounded-xl hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center gap-2 cursor-pointer">
-              <Save size={18} /> Save Counseling Record
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={<MessageSquare size={22} />}
+          title="No counseling sessions yet"
+          hint="Record a session after meeting your faculty counselor, and it'll appear here as a timeline."
+          action={
+            <button onClick={() => setSheetOpen(true)} className="btn-primary !w-auto px-6">
+              <Plus size={18} /> Record first session
             </button>
-          </div>
-        </form>
-      </div>
+          }
+        />
+      )}
 
-      {/* 🌟 TABLE SECTION: Where past logs are displayed */}
-      <div className="card overflow-x-auto">
-        {logs.length > 0 ? (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-200 bg-slate-50/60">
-                <th className="p-5 w-1/6">Date</th>
-                <th className="p-5 w-1/4">Counselor</th>
-                <th className="p-5">Remarks / Action Taken</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.slice().reverse().map((log, index) => (
-                <tr key={index} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                  <td className="p-5 font-medium text-slate-600">{log.date}</td>
-                  <td className="p-5 font-semibold text-primary">{log.counselor}</td>
-                  <td className="p-5 text-slate-600">"{log.remarks}"</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="p-16 text-center text-slate-400">
-            No counseling records found. Add your first one above.
-          </div>
-        )}
-      </div>
+      <Sheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Record a session"
+        footer={
+          <button
+            type="submit"
+            form="log-form"
+            disabled={saving}
+            className="btn-primary disabled:opacity-50"
+          >
+            <Save size={18} /> {saving ? 'Saving…' : 'Save session'}
+          </button>
+        }
+      >
+        <form id="log-form" onSubmit={handleAddLog}>
+          <ListGroup>
+            <Field icon={<CalendarDays size={15} />} tone="blue" label="Date" type="date" required {...bind('date')} />
+            <Field icon={<UserCheck size={15} />} tone="violet" label="Counselor" placeholder="Dr. K. Srinivas" required {...bind('counselor')} />
+            <AreaField icon={<FileText size={15} />} tone="orange" label="Remarks" rows="4" placeholder="What was discussed?" required {...bind('remarks')} />
+          </ListGroup>
+        </form>
+      </Sheet>
     </div>
   );
 }

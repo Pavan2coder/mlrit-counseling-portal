@@ -1,140 +1,168 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Save, Search, Award, Target } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import { Save, Award, Target, Plus, Trash2, Building2, CalendarDays, UserCircle } from 'lucide-react';
+import { PageHeader, Segmented, ListGroup, Field, EmptyState } from './ui';
+import { uiSpring } from '../motion';
+
+const API = "https://mlrit-counseling-portal.onrender.com";
+
+const BLANK = {
+  certifications: { courseName: "", issuer: "", date: "" },
+  activities: { eventName: "", role: "", date: "" },
+};
 
 export default function ActivitiesCerts() {
   const [htNo, setHtNo] = useState("");
-  
-  // States for our two new tables
-  const [certifications, setCertifications] = useState([{ courseName: "", issuer: "", date: "" }]);
-  const [activities, setActivities] = useState([{ eventName: "", role: "", date: "" }]);
+  const [tab, setTab] = useState('certifications');
+  const [saving, setSaving] = useState(false);
+  const [certifications, setCertifications] = useState([]);
+  const [activities, setActivities] = useState([]);
 
-  // Handlers to add new rows
-  const handleAddCert = () => setCertifications([...certifications, { courseName: "", issuer: "", date: "" }]);
-  const handleAddActivity = () => setActivities([...activities, { eventName: "", role: "", date: "" }]);
-
-  // Handlers to update text in the rows
-  const handleCertChange = (index, field, value) => {
-    const updated = [...certifications];
-    updated[index][field] = value;
-    setCertifications(updated);
-  };
-  
-  const handleActivityChange = (index, field, value) => {
-    const updated = [...activities];
-    updated[index][field] = value;
-    setActivities(updated);
-  };
-
-  // 🔍 The Search Function
-  const handleSearch = async () => {
-    if (!htNo) return alert("Please enter a Hall Ticket Number to search!");
-
-    try {
-      const response = await axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`);
-      
-      if (response.data.certifications?.length > 0) setCertifications(response.data.certifications);
-      if (response.data.activities?.length > 0) setActivities(response.data.activities);
-      
-      alert("Activities & Certifications loaded successfully!");
-    } catch (error) {
-      console.error("Search Error:", error);
-      alert("Student not found in the database!");
+  // Loads the logged-in student's own records, same as every other tab
+  useEffect(() => {
+    const loggedInHtNo = localStorage.getItem('studentHtNo');
+    if (!loggedInHtNo) {
+      toast.error("No student logged in. Please log in again.");
+      return;
     }
-  };
+    setHtNo(loggedInHtNo);
 
-  // 💾 The Save Function
-  const handleSaveData = async () => {
-    if (!htNo) return alert("Please enter the student's Hall Ticket Number first!");
-
-    try {
-      await axios.post('https://mlrit-counseling-portal.onrender.com/api/students/save', {
-        htNo: htNo,
-        certifications: certifications,
-        activities: activities
+    axios.get(`${API}/api/students/${loggedInHtNo}`)
+      .then(({ data }) => {
+        if (data.certifications?.length) setCertifications(data.certifications);
+        if (data.activities?.length) setActivities(data.activities);
+      })
+      .catch((error) => {
+        if (error.response?.status !== 404) {
+          console.error("Load error:", error);
+          toast.error("Failed to load your records.");
+        }
       });
-      alert("Activities & Certifications Saved Successfully!");
+  }, []);
+
+  const handleSaveData = async () => {
+    if (!htNo) return toast.error("No student logged in.");
+
+    setSaving(true);
+    const toastId = toast.loading("Saving records...");
+    try {
+      await axios.post(`${API}/api/students/save`, { htNo, certifications, activities });
+      toast.success("Records saved successfully!", { id: toastId });
     } catch (error) {
       console.error("Save Error:", error);
-      alert("Failed to save. Check if your backend is running!");
+      toast.error("Failed to save. Check if your backend is running.", { id: toastId });
+    } finally {
+      setSaving(false);
     }
   };
 
+  const isCerts = tab === 'certifications';
+  const rows = isCerts ? certifications : activities;
+  const setRows = isCerts ? setCertifications : setActivities;
+
+  const addRow = () => setRows([...rows, { ...BLANK[tab] }]);
+  const removeRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
+  const update = (i, field, value) =>
+    setRows(rows.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)));
+
+  const fields = isCerts
+    ? [
+        { key: 'courseName', label: 'Course', placeholder: 'React Basics', icon: <Award size={15} />, tone: 'orange' },
+        { key: 'issuer', label: 'Issued by', placeholder: 'Coursera', icon: <Building2 size={15} />, tone: 'blue' },
+        { key: 'date', label: 'Date', placeholder: 'Oct 2025', icon: <CalendarDays size={15} />, tone: 'violet' },
+      ]
+    : [
+        { key: 'eventName', label: 'Event', placeholder: 'Hackathon', icon: <Target size={15} />, tone: 'green' },
+        { key: 'role', label: 'Role', placeholder: 'Participant', icon: <UserCircle size={15} />, tone: 'teal' },
+        { key: 'date', label: 'Date', placeholder: 'Nov 2025', icon: <CalendarDays size={15} />, tone: 'violet' },
+      ];
+
   return (
-    <div className="animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-wrap gap-4 justify-between items-start mb-8">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Activities &amp; Certs</h2>
-          <p className="text-slate-500 mt-1">Co-curricular &amp; Extra-curricular Records</p>
-        </div>
-        <button onClick={handleSaveData} className="bg-accent text-white px-6 py-2.5 rounded-xl font-semibold hover:opacity-90 active:scale-[0.99] transition-all cursor-pointer flex items-center gap-2">
-          <Save size={18} /> Save Records
-        </button>
+    <div className="animate-fade-in pb-20">
+      <PageHeader
+        title="Achievements"
+        subtitle={`${certifications.length} certifications · ${activities.length} activities`}
+        actions={
+          <button
+            onClick={handleSaveData}
+            disabled={saving}
+            className="bg-primary text-white px-5 py-2.5 rounded-xl font-semibold cursor-pointer
+                       flex items-center gap-2 disabled:opacity-50 active:scale-95 hover:bg-primary-hover
+                       transition-[background-color,transform] duration-100"
+          >
+            <Save size={17} /> {saving ? 'Saving…' : 'Save'}
+          </button>
+        }
+      />
+
+      <div className="max-w-md mb-6">
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          layoutId="achievements-tab"
+          options={[
+            { value: 'certifications', label: 'Certifications' },
+            { value: 'activities', label: 'Activities' },
+          ]}
+        />
       </div>
 
-      {/* Search Bar */}
-      <div className="card p-5 mb-6 flex flex-col md:flex-row md:items-center gap-3 border-l-4 border-accent">
-        <label className="font-semibold text-slate-700 text-sm shrink-0 flex items-center gap-2"><Search size={16} /> Fetch Student Records</label>
-        <div className="flex w-full gap-2">
-          <input type="text" value={htNo} onChange={(e) => setHtNo(e.target.value)} placeholder="Enter HT No. (e.g. 24R21A0501)" className="input-field flex-1 md:max-w-xs" />
-          <button onClick={handleSearch} className="bg-accent text-white px-6 rounded-xl font-semibold hover:opacity-90 active:scale-[0.99] transition-all cursor-pointer">Search</button>
-        </div>
-      </div>
+      {rows.length > 0 ? (
+        <div className="space-y-3">
+          {rows.map((row, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={uiSpring}
+              className="relative"
+            >
+              <ListGroup>
+                {fields.map((f) => (
+                  <Field
+                    key={f.key}
+                    icon={f.icon}
+                    tone={f.tone}
+                    label={f.label}
+                    placeholder={f.placeholder}
+                    value={row[f.key] || ''}
+                    onChange={(e) => update(i, f.key, e.target.value)}
+                  />
+                ))}
+              </ListGroup>
+              <button
+                onClick={() => removeRow(i)}
+                className="icon-btn absolute -top-1 -right-1 bg-white border border-slate-900/10 hover:!text-red-500"
+                aria-label="Remove entry"
+              >
+                <Trash2 size={15} />
+              </button>
+            </motion.div>
+          ))}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Table 1: Certifications */}
-        <div className="card p-6 overflow-x-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Award size={20} className="text-accent" /> Technical Certifications</h3>
-            <button onClick={handleAddCert} className="text-sm bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 transition-colors cursor-pointer">+ Add Row</button>
-          </div>
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-200">
-                <th className="p-2">Course / Cert Name</th>
-                <th className="p-2">Issued By</th>
-                <th className="p-2">Date/Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              {certifications.map((row, index) => (
-                <tr key={index} className="border-b border-slate-100 last:border-0">
-                  <td className="p-1.5"><input value={row.courseName} onChange={(e) => handleCertChange(index, 'courseName', e.target.value)} placeholder="e.g. React Basics" className="input-field !py-2" /></td>
-                  <td className="p-1.5"><input value={row.issuer} onChange={(e) => handleCertChange(index, 'issuer', e.target.value)} placeholder="Coursera" className="input-field !py-2" /></td>
-                  <td className="p-1.5"><input type="text" value={row.date} onChange={(e) => handleCertChange(index, 'date', e.target.value)} placeholder="Oct 2025" className="input-field !py-2 w-28" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <button
+            onClick={addRow}
+            className="btn-ghost !justify-start text-primary"
+          >
+            <Plus size={18} /> Add {isCerts ? 'certification' : 'activity'}
+          </button>
         </div>
-
-        {/* Table 2: Activities */}
-        <div className="card p-6 overflow-x-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Target size={20} className="text-primary" /> Co-Curricular Activities</h3>
-            <button onClick={handleAddActivity} className="text-sm bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-200 transition-colors cursor-pointer">+ Add Row</button>
-          </div>
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-200">
-                <th className="p-2">Event Name</th>
-                <th className="p-2">Role / Position</th>
-                <th className="p-2">Date/Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activities.map((row, index) => (
-                <tr key={index} className="border-b border-slate-100 last:border-0">
-                  <td className="p-1.5"><input value={row.eventName} onChange={(e) => handleActivityChange(index, 'eventName', e.target.value)} placeholder="e.g. Hackathon" className="input-field !py-2" /></td>
-                  <td className="p-1.5"><input value={row.role} onChange={(e) => handleActivityChange(index, 'role', e.target.value)} placeholder="Participant" className="input-field !py-2" /></td>
-                  <td className="p-1.5"><input type="text" value={row.date} onChange={(e) => handleActivityChange(index, 'date', e.target.value)} placeholder="Nov 2025" className="input-field !py-2 w-28" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      ) : (
+        <EmptyState
+          icon={isCerts ? <Award size={22} /> : <Target size={22} />}
+          title={`No ${isCerts ? 'certifications' : 'activities'} yet`}
+          hint={isCerts
+            ? "Courses and technical certifications you've completed will be listed here."
+            : "Hackathons, sports, clubs and events you've taken part in will be listed here."}
+          action={
+            <button onClick={addRow} className="btn-primary !w-auto px-6">
+              <Plus size={18} /> Add {isCerts ? 'certification' : 'activity'}
+            </button>
+          }
+        />
+      )}
     </div>
   );
 }
