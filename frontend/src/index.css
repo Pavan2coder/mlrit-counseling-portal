@@ -1,65 +1,339 @@
 /* Tailwind v4 */
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
 
 @theme {
-  /* MLRIT palette (unchanged) */
+  /* MLRIT palette — same hues, retuned for translucent surfaces */
   --color-primary: #1a4d2e;
   --color-primary-hover: #153d24;
   --color-accent: #d67b27;
-  --color-canvas: #f4f3ee;
-  --font-sans: "Lexend", ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: #f3f2ee;
+
+  /* Apple §15: the platform font already ships optical sizing + tracking tables */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable Text",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+
+  /* §4 — iOS spring curves. Outbound + its mirror, so reversible paths match (§7). */
+  --ease-out-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in-ios: cubic-bezier(1, 0, 0.68, 0.28);
+  --response: 0.4s;
+
+  /* §12 — material weights. Light for controls, heavier for structure. */
+  --mat-light: rgba(255, 255, 255, 0.66);
+  --mat-heavy: rgba(246, 245, 241, 0.8);
+  --blur-small: blur(12px) saturate(180%);
+  --blur-large: blur(28px) saturate(180%);
+
+  /* Bigger surface = deeper shadow (§12) */
+  --shadow-chip: 0 1px 2px rgba(16, 32, 22, 0.05);
+  --shadow-card: 0 1px 2px rgba(16, 32, 22, 0.04), 0 12px 32px -16px rgba(16, 32, 22, 0.16);
+  --shadow-sheet: 0 2px 6px rgba(16, 32, 22, 0.06), 0 40px 80px -32px rgba(16, 32, 22, 0.4);
 }
 
 @layer base {
   body {
-    @apply bg-canvas text-slate-800 antialiased font-sans;
+    @apply text-slate-800 antialiased font-sans;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+
+    /* Ambient light rather than flat paint — the ground has depth so the
+       translucent surfaces above it have something to pick up. */
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, rgba(26, 77, 46, 0.10), transparent 60%),
+      radial-gradient(45rem 35rem at 95% 8%, rgba(214, 123, 39, 0.09), transparent 62%),
+      radial-gradient(50rem 40rem at 50% 110%, rgba(26, 77, 46, 0.07), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  /* §15 — tight leading on large text, comfortable on body */
+  h1, h2, h3 {
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+
+  /* §1 — never let the browser add its own latency to a tap */
+  button, a, input, textarea, select { touch-action: manipulation; }
+
+  ::selection { background: color-mix(in oklab, var(--color-accent) 28%, transparent); }
+
+  /* §7 — focus ring reads as the same material everywhere */
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
   }
 }
 
 @layer components {
-  /* Auth brand side panel (deep green with orange edge) */
+  /* ---- Materials (§12) ------------------------------------------------ */
+
+  /* Floating chrome: content scrolls *under* this, it doesn't own a strip */
+  .material {
+    background: var(--mat-light);
+    -webkit-backdrop-filter: var(--blur-small);
+    backdrop-filter: var(--blur-small);
+    border-bottom: 1px solid rgba(16, 32, 22, 0.06);
+  }
+
+  /* Structural material — heavier, separates a region rather than a control */
+  .material-heavy {
+    background: var(--mat-heavy);
+    -webkit-backdrop-filter: var(--blur-large);
+    backdrop-filter: var(--blur-large);
+  }
+
+  /* Scroll edge effect instead of a hard 1px divider (§12) */
+  .scroll-edge {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20px);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 20px);
+  }
+
+  /* Deep-green brand region. Vibrancy handled by the .vib-* classes below. */
   .brand-panel {
-    @apply relative overflow-hidden bg-primary text-white;
+    @apply relative overflow-hidden text-white;
+    background:
+      radial-gradient(120% 90% at 15% 0%, #24693e 0%, transparent 60%),
+      radial-gradient(90% 80% at 100% 100%, #0f3a21 0%, transparent 65%),
+      var(--color-primary);
   }
 
-  /* Clean flat card — square-ish corners, hairline border, soft shadow */
+  /* §12 — vibrancy: over a colored/translucent ground, don't use flat gray.
+     Heavier weight + a tracking bump keeps it legible. */
+  .vib-primary { @apply text-white/95 font-semibold; }
+  .vib-secondary { @apply text-white/70; letter-spacing: 0.005em; }
+  .vib-tertiary { @apply text-white/45 font-medium; letter-spacing: 0.02em; }
+
+  /* ---- Surfaces ------------------------------------------------------- */
+
   .card {
-    @apply bg-white rounded-2xl border border-slate-200/70 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)];
+    @apply bg-white rounded-2xl border border-slate-900/[0.06];
+    box-shadow: var(--shadow-card);
+    transition: box-shadow var(--response) var(--ease-out-ios),
+                transform var(--response) var(--ease-out-ios);
   }
 
-  /* Input field */
+  /* §8 — hint toward the outcome: a pressable card lifts toward the pointer */
+  .card-interactive { @apply cursor-pointer; }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sheet);
+  }
+  .card-interactive:active {
+    transform: translateY(-1px) scale(0.995);
+    transition-duration: 0.1s;
+  }
+
+  /* ---- Controls ------------------------------------------------------- */
+
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/60
-           focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary
-           outline-none transition-colors placeholder:text-slate-400 text-slate-800 font-medium;
+    @apply w-full px-4 py-3 rounded-xl border border-slate-900/[0.08] bg-white/60
+           outline-none placeholder:text-slate-400 text-slate-800 font-medium;
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out,
+                box-shadow 0.15s ease-out;
+  }
+  .input-field:hover:not(:focus) { @apply border-slate-900/15; }
+  .input-field:focus {
+    @apply bg-white border-primary;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primary) 14%, transparent);
+    outline: none;
   }
 
+  /* §15 — small text wants *positive* tracking */
   .label-text {
-    @apply text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block;
+    @apply text-[11px] font-semibold text-slate-500 uppercase mb-1.5 block;
+    letter-spacing: 0.06em;
   }
 
-  /* Primary button */
+  /* §1 — feedback on pointer-DOWN, 100ms, never on release */
   .btn-primary {
     @apply w-full bg-primary text-white font-semibold px-6 py-3.5 rounded-xl
-           hover:bg-primary-hover active:scale-[0.99] transition-all
-           flex items-center justify-center gap-2;
+           flex items-center justify-center gap-2 cursor-pointer;
+    box-shadow: var(--shadow-chip);
+    transition: background-color 0.15s ease-out, transform 0.1s ease-out,
+                box-shadow var(--response) var(--ease-out-ios);
   }
+  .btn-primary:hover { @apply bg-primary-hover; box-shadow: var(--shadow-card); }
+  .btn-primary:active { transform: scale(0.97); }
 
-  /* Secondary / outline button */
   .btn-ghost {
-    @apply w-full bg-white border border-slate-200 text-slate-700 font-semibold px-6 py-3.5 rounded-xl
-           hover:border-primary hover:bg-slate-50 active:scale-[0.99] transition-all
-           flex items-center justify-center gap-3;
+    @apply w-full bg-white/70 border border-slate-900/10 text-slate-700 font-semibold
+           px-6 py-3.5 rounded-xl flex items-center justify-center gap-3 cursor-pointer;
+    -webkit-backdrop-filter: var(--blur-small);
+    backdrop-filter: var(--blur-small);
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out,
+                transform 0.1s ease-out;
+  }
+  .btn-ghost:hover { @apply bg-white border-slate-900/20; }
+  .btn-ghost:active { transform: scale(0.97); }
+
+  /* ---- Inset grouped list (the iOS Settings pattern) ------------------- */
+  /* Replaces walls of boxed inputs: label left, value right, hairline between,
+     inset from the left so the group reads as one object. */
+
+  .list-group {
+    @apply bg-white rounded-2xl overflow-hidden border border-slate-900/[0.06];
+    box-shadow: var(--shadow-card);
   }
 
+  .list-title {
+    @apply text-[11px] font-semibold text-slate-500 uppercase px-4 pb-2 pt-6 block;
+    letter-spacing: 0.06em;
+  }
+
+  .list-row {
+    @apply relative flex items-center gap-3 px-4 min-h-[3.25rem];
+    transition: background-color 0.12s ease-out;
+  }
+  .list-row + .list-row::before {
+    content: '';
+    @apply absolute left-4 right-0 top-0 h-px bg-slate-900/[0.07];
+  }
+  .list-row:focus-within { @apply bg-primary/[0.035]; }
+
+  .list-label { @apply text-sm text-slate-500 shrink-0 w-28 sm:w-40; }
+
+  .list-input {
+    @apply flex-1 min-w-0 bg-transparent outline-none py-3 text-right
+           text-slate-900 font-medium placeholder:text-slate-300 placeholder:font-normal;
+  }
+  .list-input:disabled, .list-input[readonly] { @apply text-slate-400; }
+
+  /* ---- Segmented control ---------------------------------------------- */
+
+  .segmented { @apply relative flex p-1 rounded-2xl bg-slate-900/[0.05]; }
+  .segmented-item {
+    @apply relative z-10 flex-1 px-4 py-2 text-sm font-semibold rounded-xl cursor-pointer
+           text-slate-500 transition-[color,transform] duration-100;
+  }
+  .segmented-item:active { transform: scale(0.96); }
+  .segmented-item[data-active="true"] { @apply text-slate-900; }
+
+  /* ---- Dense data grid (no rainbow tints — weight carries the grouping) - */
+
+  .grid-table { @apply w-full text-sm border-separate border-spacing-0; }
+  .grid-table th {
+    @apply px-3 py-2.5 text-[11px] font-semibold uppercase text-slate-500 text-center
+           bg-slate-900/[0.03];
+    letter-spacing: 0.05em;
+  }
+  .grid-table td { @apply px-1 py-1 border-t border-slate-900/[0.06]; }
+  .grid-table tbody tr { transition: background-color 0.12s ease-out; }
+  .grid-table tbody tr:hover { @apply bg-slate-900/[0.02]; }
+
+  .cell-input {
+    @apply w-full px-2 py-2.5 rounded-lg bg-transparent outline-none text-center
+           font-medium text-slate-800 placeholder:text-slate-300;
+    transition: background-color 0.12s ease-out, box-shadow 0.12s ease-out;
+  }
+  .cell-input:focus {
+    @apply bg-white;
+    box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--color-primary) 45%, transparent);
+  }
+
+  /* ---- Sheet (§12: a real material arriving, not an opacity fade) ------ */
+
+  .sheet {
+    background: rgba(252, 252, 250, 0.86);
+    -webkit-backdrop-filter: var(--blur-large);
+    backdrop-filter: var(--blur-large);
+    box-shadow: var(--shadow-sheet);
+    border-top: 1px solid rgba(255, 255, 255, 0.7); /* light catching the edge */
+  }
+
+  .grabber { @apply mx-auto h-1.5 w-9 rounded-full bg-slate-900/20; }
+
+  /* ---- Colored icon tiles (the iOS Settings device) --------------------- */
+  /* A saturated rounded square with a white glyph. Each row's color is stable,
+     so the color identifies the row rather than just decorating it. */
+
+  .tile-icon {
+    @apply h-7 w-7 rounded-[8px] flex items-center justify-center text-white shrink-0;
+    box-shadow: 0 1px 2px rgba(16, 32, 22, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .tile-lg {
+    @apply h-11 w-11 rounded-[13px] flex items-center justify-center text-white shrink-0;
+    box-shadow: 0 2px 6px rgba(16, 32, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .t-green  { background-image: linear-gradient(160deg, #2f7d4c, #1a4d2e); }
+  .t-orange { background-image: linear-gradient(160deg, #f0973f, #d67b27); }
+  .t-blue   { background-image: linear-gradient(160deg, #3f9cf5, #1170d4); }
+  .t-violet { background-image: linear-gradient(160deg, #a78bfa, #7c4ddc); }
+  .t-pink   { background-image: linear-gradient(160deg, #f77398, #e04372); }
+  .t-teal   { background-image: linear-gradient(160deg, #46c3c0, #14908f); }
+  .t-slate  { background-image: linear-gradient(160deg, #8a94a6, #5b6577); }
+  .t-red    { background-image: linear-gradient(160deg, #f87171, #dc2626); }
+
+  /* ---- Hero — the one saturated surface per screen ---------------------- */
+
+  .hero {
+    @apply relative overflow-hidden rounded-3xl text-white;
+    background:
+      radial-gradient(120% 120% at 8% 0%, #2c7a4b 0%, transparent 55%),
+      radial-gradient(90% 110% at 100% 100%, #0d3a20 0%, transparent 60%),
+      var(--color-primary);
+    box-shadow: 0 2px 6px rgba(16, 32, 22, 0.1), 0 28px 60px -30px rgba(16, 32, 22, 0.7);
+  }
+
+  /* ---- Small pieces ---------------------------------------------------- */
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
+           bg-slate-900/[0.05] text-slate-600;
+  }
+
+  .icon-btn {
+    @apply p-2 rounded-xl text-slate-400 cursor-pointer
+           transition-[background-color,color,transform] duration-100;
+  }
+  .icon-btn:hover { @apply bg-slate-900/[0.05] text-slate-700; }
+  .icon-btn:active { transform: scale(0.9); }
+
+  /* Used by every dashboard tab — enter along one path, tight and non-blocking */
   .animate-fade-in {
-    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn var(--response) var(--ease-out-ios);
   }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translate3d(0, 10px, 0); }
+    to { opacity: 1; transform: none; }
   }
+}
+
+/* ---- §14 Accessibility: three independent signals --------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.12s !important; /* keep the cross-fade, drop the travel */
+  }
+  .animate-fade-in { animation: rmFade 0.2s ease both; }
+  @keyframes rmFade { from { opacity: 0 } to { opacity: 1 } }
+  .card-interactive:hover, .btn-primary:active, .btn-ghost:active { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .material, .material-heavy, .btn-ghost, .input-field {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .material { background: #fbfaf7; }
+  .material-heavy { background: #f6f5f1; }
+  .btn-ghost, .input-field { background: #fff; }
+}
+
+@media (prefers-contrast: more) {
+  body { background-image: none; }
+  .card, .input-field, .btn-ghost { @apply border-slate-900/40; }
+  .list-group { @apply border-slate-900/40; }
+  .list-row + .list-row::before { @apply bg-slate-900/30; }
+  .material, .material-heavy { background: #fff; backdrop-filter: none; }
+  .vib-secondary { @apply text-white; }
+  .vib-tertiary { @apply text-white/80; }
 }
 
 @media print {
