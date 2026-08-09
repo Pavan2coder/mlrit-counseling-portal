@@ -5,6 +5,12 @@ import toast from 'react-hot-toast';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 // 🌟 Added Eye and EyeOff to your imports here:
 import { Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+// Local demo account so the UI can be worked on without the backend or a Google
+// client ID. Guarded by import.meta.env.DEV, which is a literal `false` in a
+// production build — the whole branch is dead-code-eliminated by Vite.
+const DEMO = { email: 'demo@mlrit.ac.in', htNo: 'DEMO123', name: 'Demo Student' };
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -21,8 +27,20 @@ function LoginForm() {
       return;
     }
     
+    if (
+      import.meta.env.DEV &&
+      email.trim().toLowerCase() === DEMO.email &&
+      password.trim().toUpperCase() === DEMO.htNo
+    ) {
+      localStorage.setItem('studentHtNo', DEMO.htNo);
+      localStorage.setItem('studentName', DEMO.name);
+      toast.success('Demo mode — signed in locally, no backend.');
+      navigate('/dashboard');
+      return;
+    }
+
     const toastId = toast.loading("Verifying with database...");
-    
+
     try {
       const payload = {
         email: email.trim().toLowerCase(),
@@ -88,10 +106,8 @@ function LoginForm() {
     onError: () => {
       toast.error("Google login cancelled or failed!");
     },
-    flow: 'implicit',
-    prompt: 'select_account',
-    hint: '',
-    hosted_domain: ''
+    flow: 'implicit'
+    // `prompt` is passed per-click instead — see the button below.
   });
 
   return (
@@ -99,31 +115,48 @@ function LoginForm() {
 
       {/* LEFT — brand panel */}
       <div className="brand-panel hidden lg:flex flex-col justify-between p-14">
+        <div className="absolute -top-40 -right-40 w-[34rem] h-[34rem] rounded-full bg-white/[0.04] blur-3xl" />
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full border border-white/10" />
-        <div className="absolute bottom-0 right-0 w-40 h-40 bg-accent/80 [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
+        <div className="absolute bottom-0 right-0 w-44 h-44 bg-accent/70 [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
 
-        <div className="relative z-10 bg-white/95 p-4 rounded-xl w-40 h-24 flex items-center justify-center">
+        <div
+          className="relative z-10 material rounded-2xl p-4 w-40 h-24 flex items-center justify-center"
+          style={{ boxShadow: 'var(--shadow-card)' }}
+        >
           <img src="/mlrit-logo.png" alt="MLRIT Logo" className="max-h-full max-w-full object-contain" />
         </div>
         <div className="relative z-10">
-          <h2 className="text-4xl font-extrabold leading-tight text-white/95">
+          <h2
+            className="text-[2.75rem] font-bold vib-primary"
+            style={{ letterSpacing: '-0.03em', lineHeight: 1.05 }}
+          >
             Welcome back.
           </h2>
-          <p className="text-white/60 mt-4 max-w-sm leading-relaxed">
+          <p className="vib-secondary mt-4 max-w-sm leading-relaxed">
             Sign in to access your academic records, analytics and counseling history.
           </p>
         </div>
-        <p className="relative z-10 text-white/40 text-xs">MLR Institute of Technology</p>
+        <p className="relative z-10 vib-tertiary text-xs">MLR Institute of Technology</p>
       </div>
 
       {/* RIGHT — form */}
       <div className="flex items-center justify-center p-8 sm:p-14 bg-canvas">
-        <div className="w-full max-w-md animate-fade-in">
-          <div className="lg:hidden bg-white border border-slate-200 p-4 rounded-xl w-36 h-20 flex items-center justify-center mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="lg:hidden card p-4 w-36 h-20 flex items-center justify-center mb-8">
             <img src="/mlrit-logo.png" alt="MLRIT Logo" className="max-h-full max-w-full object-contain" />
           </div>
 
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Student Portal</h1>
+          <h1
+            className="text-4xl font-bold text-slate-900"
+            style={{ letterSpacing: '-0.035em' }}
+          >
+            Student Portal
+          </h1>
           <p className="text-slate-500 mt-2 mb-8">Log in with your MLRIT college account.</p>
 
           <form onSubmit={handleLogin} className="space-y-5">
@@ -171,6 +204,21 @@ function LoginForm() {
             </button>
           </form>
 
+          {import.meta.env.DEV && (
+            <button
+              type="button"
+              onClick={() => { setEmail(DEMO.email); setPassword(DEMO.htNo); }}
+              className="mt-3 w-full text-left text-xs text-slate-500 bg-accent/10 border border-accent/20
+                         rounded-xl px-4 py-2.5 hover:bg-accent/15 active:scale-[0.99]
+                         transition-[background-color,transform] duration-100 cursor-pointer"
+            >
+              <span className="font-semibold text-accent">Dev only</span> — tap to fill demo login
+              <span className="block font-mono text-[11px] text-slate-600 mt-0.5">
+                {DEMO.email} / {DEMO.htNo}
+              </span>
+            </button>
+          )}
+
           {/* Google OAuth Button */}
           <div className="mt-6">
             <div className="relative">
@@ -183,7 +231,9 @@ function LoginForm() {
             </div>
 
             <button
-              onClick={() => googleLogin()}
+              /* Per-request override — forces the account chooser on every click,
+                 even after consent was already granted for this browser. */
+              onClick={() => googleLogin({ prompt: 'select_account' })}
               type="button"
               className="btn-ghost mt-6 cursor-pointer"
             >
@@ -197,13 +247,13 @@ function LoginForm() {
             </button>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-200 text-center text-sm">
+          <div className="mt-8 pt-6 border-t border-slate-900/[0.07] text-center text-sm">
             <span className="text-slate-500">Don't have an account yet? </span>
             <Link to="/signup" className="text-primary font-semibold hover:underline">
               Create student account
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

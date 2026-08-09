@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import { User, Mail, Lock, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 function SignupForm() {
   const [formData, setFormData] = useState({ name: '', email: '', rollNo: '' });
@@ -74,8 +75,8 @@ function SignupForm() {
     onError: () => {
       toast.error("Google signup cancelled or failed!");
     },
-    flow: 'implicit',
-    prompt: 'select_account'
+    flow: 'implicit'
+    // `prompt` is passed per-click instead — see the button below.
   });
 
   return (
@@ -83,31 +84,48 @@ function SignupForm() {
 
       {/* LEFT — brand panel */}
       <div className="brand-panel hidden lg:flex flex-col justify-between p-14">
+        <div className="absolute -bottom-40 -left-40 w-[34rem] h-[34rem] rounded-full bg-white/[0.04] blur-3xl" />
         <div className="absolute -bottom-32 -left-16 w-[28rem] h-[28rem] rounded-full border border-white/10" />
-        <div className="absolute top-0 right-0 w-40 h-40 bg-accent/80 [clip-path:polygon(100%_0,0_0,100%_100%)]" />
+        <div className="absolute top-0 right-0 w-44 h-44 bg-accent/70 [clip-path:polygon(100%_0,0_0,100%_100%)]" />
 
-        <div className="relative z-10 bg-white/95 p-4 rounded-xl w-40 h-24 flex items-center justify-center">
+        <div
+          className="relative z-10 material rounded-2xl p-4 w-40 h-24 flex items-center justify-center"
+          style={{ boxShadow: 'var(--shadow-card)' }}
+        >
           <img src="/mlrit-logo.png" alt="MLRIT Logo" className="max-h-full max-w-full object-contain" />
         </div>
         <div className="relative z-10">
-          <h2 className="text-4xl font-extrabold leading-tight text-white/95">
+          <h2
+            className="text-[2.75rem] font-bold vib-primary"
+            style={{ letterSpacing: '-0.03em', lineHeight: 1.05 }}
+          >
             Join the portal.
           </h2>
-          <p className="text-white/60 mt-4 max-w-sm leading-relaxed">
+          <p className="vib-secondary mt-4 max-w-sm leading-relaxed">
             Create your student account to start tracking your academic journey.
           </p>
         </div>
-        <p className="relative z-10 text-white/40 text-xs">MLR Institute of Technology</p>
+        <p className="relative z-10 vib-tertiary text-xs">MLR Institute of Technology</p>
       </div>
 
       {/* RIGHT — form */}
       <div className="flex items-center justify-center p-8 sm:p-14 bg-canvas">
-        <div className="w-full max-w-md animate-fade-in">
-          <div className="lg:hidden bg-white border border-slate-200 p-4 rounded-xl w-36 h-20 flex items-center justify-center mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="lg:hidden card p-4 w-36 h-20 flex items-center justify-center mb-8">
             <img src="/mlrit-logo.png" alt="MLRIT Logo" className="max-h-full max-w-full object-contain" />
           </div>
 
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">New Student?</h2>
+          <h2
+            className="text-4xl font-bold text-slate-900"
+            style={{ letterSpacing: '-0.035em' }}
+          >
+            New Student?
+          </h2>
           <p className="text-slate-500 mt-2 mb-8">Register with your MLRIT details.</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
@@ -160,7 +178,9 @@ function SignupForm() {
             </div>
 
             <button
-              onClick={() => googleSignup()}
+              /* Per-request override — forces the account chooser on every click,
+                 even after consent was already granted for this browser. */
+              onClick={() => googleSignup({ prompt: 'select_account' })}
               type="button"
               className="btn-ghost mt-6 cursor-pointer"
             >
@@ -178,7 +198,7 @@ function SignupForm() {
             <span className="text-slate-500">Already have an account? </span>
             <Link to="/login" className="text-primary font-semibold hover:underline">Login here</Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
