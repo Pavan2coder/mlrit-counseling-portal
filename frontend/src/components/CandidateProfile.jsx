@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Printer, Save } from 'lucide-react';
+import {
+  Printer, Save, User, Hash, GitBranch, CalendarDays, Cake, Droplet,
+  GraduationCap, Trophy, Gauge, HeartPulse, Pill, Mail, Phone, MapPin,
+  Users, Briefcase, Building2, AtSign, Smartphone, Languages, BadgeCheck,
+} from 'lucide-react';
+import { PageHeader, ListGroup, Field, AreaField } from './ui';
+
+const I = 15; // glyph size inside the 28px tiles
 
 export default function CandidateProfile() {
   // This holds all the form data
@@ -14,19 +21,18 @@ export default function CandidateProfile() {
     languages: "", memberships: "", cgpa: "",
     placement: "No", higherStudies: "No"
   });
+  const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🌟 NEW: The Auto-Load Magic! 
-  // This runs automatically exactly ONE time when the page opens
+  // Auto-load the logged-in student's record once on open
   useEffect(() => {
-    // 1. Look in the browser memory for the logged-in student
     const loggedInHtNo = localStorage.getItem('studentHtNo');
     const studentEmail = localStorage.getItem('studentEmail');
     const isGoogleAuth = localStorage.getItem('isGoogleAuth');
-    
+
     // Always resolve to a roll number (htNo) for the API call
     let htNo = loggedInHtNo;
     if (isGoogleAuth === 'true' && studentEmail) {
@@ -36,7 +42,6 @@ export default function CandidateProfile() {
     if (htNo) {
       setFormData(prev => ({ ...prev, htNo, ...(studentEmail && { studentEmail }) }));
 
-      // 2. Automatically fetch their data from the cloud!
       axios.get(`https://mlrit-counseling-portal.onrender.com/api/students/${htNo}`)
         .then(response => {
           if (response.data) {
@@ -45,7 +50,7 @@ export default function CandidateProfile() {
           }
         })
         .catch(error => {
-          // If the database says 404, it just means they are a brand new student!
+          // A 404 just means they're a brand new student
           if (error.response && error.response.status === 404) {
             toast.success("Welcome! Please fill out your profile for the first time.", { id: 'profile-load' });
           } else {
@@ -58,96 +63,114 @@ export default function CandidateProfile() {
     }
   }, []);
 
-  // 💾 The Save Function (Sending Data)
   const handleSave = async () => {
     if (!formData.htNo || !formData.name) {
       toast.error("Please enter at least your Name and Hall Ticket Number!");
       return;
     }
 
+    setSaving(true);
     const toastId = toast.loading('Saving your profile...');
 
     try {
-      const response = await axios.post('https://mlrit-counseling-portal.onrender.com/api/students/save', formData);
+      await axios.post('https://mlrit-counseling-portal.onrender.com/api/students/save', formData);
       toast.success("Profile Saved Successfully!", { id: toastId });
     } catch (error) {
       console.error("Save Error:", error);
       toast.error("Failed to connect to server. Check your backend!", { id: toastId });
+    } finally {
+      setSaving(false);
     }
   };
 
+  const bind = (name) => ({ name, value: formData[name] || '', onChange: handleChange });
+
   return (
-    <div className="animate-fade-in pb-10">
-      {/* Header Section */}
-      <div className="flex flex-wrap gap-4 justify-between items-start mb-8">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">My Profile</h2>
-          <p className="text-slate-500 mt-1">Personal Student Record</p>
+    <div className="animate-fade-in pb-20">
+      <PageHeader
+        title="Profile"
+        subtitle="Your personal student record"
+        actions={
+          <div className="flex gap-2 print:hidden">
+            <button onClick={() => window.print()} className="icon-btn bg-white border border-slate-900/10" aria-label="Print profile">
+              <Printer size={18} />
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-primary text-white px-5 py-2.5 rounded-xl font-semibold cursor-pointer
+                         flex items-center gap-2 disabled:opacity-50
+                         active:scale-95 hover:bg-primary-hover
+                         transition-[background-color,transform] duration-100"
+            >
+              <Save size={17} /> {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        }
+      />
+
+      {/* Identity hero — the one saturated surface on this screen */}
+      <div className="hero p-6 md:p-8 mb-2 flex items-center gap-5">
+        <div className="absolute -top-24 -right-12 w-72 h-72 rounded-full bg-white/[0.07] blur-3xl pointer-events-none" />
+        <div className="relative h-20 w-20 rounded-[22px] bg-white/15 border border-white/25 backdrop-blur
+                        flex items-center justify-center text-3xl font-bold shrink-0 select-none">
+          {(formData.name || '?').trim().charAt(0).toUpperCase()}
         </div>
-
-        {/* Buttons hidden when printing */}
-        <div className="flex gap-3 print:hidden">
-          <button
-            onClick={() => window.print()}
-            className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-semibold hover:border-slate-400 active:scale-[0.99] transition-all cursor-pointer flex items-center gap-2"
-          >
-<Printer size={18} /> Print PDF
-          </button>
-
-          <button
-            onClick={handleSave}
-            className="bg-primary text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-primary-hover active:scale-[0.99] transition-all cursor-pointer flex items-center gap-2"
-          >
-<Save size={18} /> Save Profile
-          </button>
+        <div className="relative min-w-0">
+          <p className="text-2xl md:text-3xl font-bold vib-primary truncate" style={{ letterSpacing: '-0.03em' }}>
+            {formData.name || 'Unnamed student'}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <span className="chip !bg-white/15 !text-white/90 font-mono">{formData.htNo || '—'}</span>
+            {formData.branch && <span className="chip !bg-white/15 !text-white/90">{formData.branch}</span>}
+            {formData.year && <span className="chip !bg-white/15 !text-white/90">Admitted {formData.year}</span>}
+          </div>
         </div>
       </div>
 
-      <div className="card p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
+        <div>
+          <ListGroup title="Identification">
+            <Field icon={<User size={I} />} tone="green" label="Full name" placeholder="Enter full name" {...bind('name')} />
+            <Field icon={<Hash size={I} />} tone="slate" label="Roll number" readOnly {...bind('htNo')} />
+            <Field icon={<GitBranch size={I} />} tone="violet" label="Branch" placeholder="CSE" {...bind('branch')} />
+            <Field icon={<CalendarDays size={I} />} tone="blue" label="Year of admission" type="number" placeholder="2024" {...bind('year')} />
+            <Field icon={<Cake size={I} />} tone="pink" label="Date of birth" type="date" {...bind('dob')} />
+            <Field icon={<Droplet size={I} />} tone="red" label="Blood group" placeholder="O+" {...bind('bloodGroup')} />
+          </ListGroup>
 
-        {/* Column 1: Identification */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b border-slate-200 pb-2">Identification</h3>
-          <div><label className="label-text">1. Full Name</label><input name="name" value={formData.name} onChange={handleChange} placeholder="Enter Full Name" className="input-field" /></div>
-          
-          {/* Made the HT No field read-only since it's tied to their login! */}
-          <div><label className="label-text">2. HT No. (Roll Number)</label><input name="htNo" value={formData.htNo} readOnly className="input-field bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200" /></div>
-          
-          <div><label className="label-text">3. Branch</label><input name="branch" value={formData.branch} onChange={handleChange} placeholder="e.g. CSE" className="input-field" /></div>
-          <div><label className="label-text">4. Year Of Admission</label><input name="year" type="number" value={formData.year} onChange={handleChange} placeholder="e.g. 2024" className="input-field" /></div>
-          <div><label className="label-text">5. Date of Birth</label><input name="dob" type="date" value={formData.dob} onChange={handleChange} className="input-field" /></div>
-          <div><label className="label-text">16. Blood Group</label><input name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} placeholder="e.g. O+" className="input-field" /></div>
+          <ListGroup title="Academic">
+            <Field icon={<GraduationCap size={I} />} tone="teal" label="Intermediate" placeholder="0" hint="%" {...bind('interMarks')} />
+            <Field icon={<Trophy size={I} />} tone="orange" label="EAMCET rank" placeholder="0" {...bind('rank')} />
+            <Field icon={<Gauge size={I} />} tone="green" label="Current CGPA" placeholder="0.00" {...bind('cgpa')} />
+          </ListGroup>
+
+          <ListGroup title="Health">
+            <Field icon={<HeartPulse size={I} />} tone="red" label="Medical issues" placeholder="None" {...bind('medical')} />
+            <Field icon={<Pill size={I} />} tone="pink" label="Medication" placeholder="None" {...bind('medicines')} />
+          </ListGroup>
         </div>
 
-        {/* Column 2: Academic & Contact */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b border-slate-200 pb-2">Academic & Contact</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <div><label className="label-text">6. Inter %</label><input name="interMarks" value={formData.interMarks} onChange={handleChange} placeholder="%" className="input-field" /></div>
-            <div><label className="label-text">7. Rank</label><input name="rank" value={formData.rank} onChange={handleChange} placeholder="EAMCET Rank" className="input-field" /></div>
-          </div>
-          <div><label className="label-text">15. Student Email</label><input name="studentEmail" value={formData.studentEmail} onChange={handleChange} placeholder="student@mlrit.ac.in" className="input-field" /></div>
-          <div><label className="label-text">9. Phone Number</label><input name="phone" value={formData.phone} onChange={handleChange} placeholder="Mobile Number" className="input-field" /></div>
-          <div><label className="label-text">8. Full Address</label><textarea name="address" value={formData.address} onChange={handleChange} placeholder="House No, Street, City..." rows="3" className="input-field"></textarea></div>
-          <div><label className="label-text">17. Medical Issues</label><input name="medical" value={formData.medical} onChange={handleChange} placeholder="If any (or type None)" className="input-field" /></div>
-        </div>
+        <div>
+          <ListGroup title="Contact">
+            <Field icon={<Mail size={I} />} tone="blue" label="College email" type="email" placeholder="student@mlrit.ac.in" {...bind('studentEmail')} />
+            <Field icon={<Phone size={I} />} tone="green" label="Phone" type="tel" placeholder="Mobile number" {...bind('phone')} />
+            <AreaField icon={<MapPin size={I} />} tone="orange" label="Address" rows="3" placeholder="House no, street, city…" {...bind('address')} />
+          </ListGroup>
 
-        {/* Column 3: Family & Career */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b border-slate-200 pb-2">Family & Career</h3>
-          <div><label className="label-text">10. Parent/Guardian Name</label><input name="parentName" value={formData.parentName} onChange={handleChange} placeholder="Parent's Name" className="input-field" /></div>
-          <div><label className="label-text">11. Designation</label><input name="designation" value={formData.designation} onChange={handleChange} placeholder="Job Title / Profession" className="input-field" /></div>
-          <div><label className="label-text">12. Organization</label><input name="organization" value={formData.organization} onChange={handleChange} placeholder="Company Name" className="input-field" /></div>
-          <div><label className="label-text">13. Parent Email</label><input name="parentEmail" value={formData.parentEmail} onChange={handleChange} placeholder="parent@email.com" className="input-field" /></div>
-          <div><label className="label-text">14. Parent Mobile</label><input name="parentMobile" value={formData.parentMobile} onChange={handleChange} placeholder="Parent's Mobile" className="input-field" /></div>
-        </div>
+          <ListGroup title="Parent / Guardian">
+            <Field icon={<Users size={I} />} tone="violet" label="Name" placeholder="Parent's name" {...bind('parentName')} />
+            <Field icon={<Briefcase size={I} />} tone="slate" label="Designation" placeholder="Job title" {...bind('designation')} />
+            <Field icon={<Building2 size={I} />} tone="teal" label="Organization" placeholder="Company name" {...bind('organization')} />
+            <Field icon={<AtSign size={I} />} tone="blue" label="Email" type="email" placeholder="parent@email.com" {...bind('parentEmail')} />
+            <Field icon={<Smartphone size={I} />} tone="green" label="Mobile" type="tel" placeholder="Parent's mobile" {...bind('parentMobile')} />
+          </ListGroup>
 
-        {/* Full Width Footer Section */}
-        <div className="col-span-1 md:col-span-3 grid grid-cols-2 gap-6 pt-4 border-t border-slate-200/50">
-          <div><label className="label-text">18. Languages known</label><textarea name="languages" value={formData.languages} onChange={handleChange} placeholder="e.g. Read: English, Telugu | Write: English..." className="input-field" rows="2"></textarea></div>
-          <div><label className="label-text">19. Professional Societies</label><textarea name="memberships" value={formData.memberships} onChange={handleChange} placeholder="CSI, IEEE, etc." className="input-field" rows="2"></textarea></div>
+          <ListGroup title="Other">
+            <AreaField icon={<Languages size={I} />} tone="orange" label="Languages known" rows="2" placeholder="Read: English, Telugu · Write: English…" {...bind('languages')} />
+            <AreaField icon={<BadgeCheck size={I} />} tone="violet" label="Professional societies" rows="2" placeholder="CSI, IEEE…" {...bind('memberships')} />
+          </ListGroup>
         </div>
-
       </div>
     </div>
   );
